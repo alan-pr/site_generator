@@ -64,7 +64,12 @@ def paste_content(destination_path, pasted_content):
 
 
 def copy_and_paste_dir_content(from_path, to_path):
-    delete_dir_content(to_path)
+    from_path = Path(from_path)
+    to_path = Path(to_path)
+    if Path(to_path).exists():
+        delete_dir_content(to_path)
+    else:
+        Path(to_path).mkdir()
     content = copy_dir_content(from_path)
     paste_content(to_path, content)
 
@@ -76,32 +81,28 @@ def extract_title(markdown):
                 return line.lstrip("#").strip(" ")
 
 
-def generate_page(from_path, template_path, dest_path):
-    # with open(from_path) as markdown_file:
-    #     markdown_content = markdown_file.read()
-    # with open(template_path) as template_file:
-    #     template_content = template_file.read()
+def generate_page(from_path, template_path, dest_path, basepath):
     markdown_content = from_path.read_text()
     template_content = Path(template_path).read_text()
-    # print(f"[X] {dest_path}")
 
     print(f"Generating page from {from_path} to {dest_path} using {template_path}...")
 
     title = extract_title(markdown_content)
     html_content = convert_to_html(markdown_content)
     new_page = template_content.replace("{{ Title }}", title).replace("{{ Content }}", html_content)
+    new_page = new_page.replace("href=/", f"href=\"{basepath}")
 
     Path(f"{dest_path}/index.html").write_text(new_page)
 
 
-def generate_page_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_page_recursive(dir_path_content, template_path, dest_dir_path, basepath=""):
     path = Path(dir_path_content)
     for subdir in path.iterdir():
         if subdir.is_dir():
             dir_name = f"{str(subdir).replace("content", dest_dir_path)}"
             Path(dir_name).mkdir()
-            generate_page_recursive(subdir, template_path, dest_dir_path)
+            generate_page_recursive(subdir, template_path, dest_dir_path, basepath)
     for subdir in path.iterdir():
         if subdir.is_file() and subdir.name == "index.md":
             dest_path = f"{dest_dir_path}/{"/".join(str(dir_path_content).split("/")[1:])}"
-            generate_page(subdir, template_path, dest_path)
+            generate_page(subdir, template_path, dest_path, basepath)
