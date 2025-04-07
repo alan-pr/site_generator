@@ -90,7 +90,9 @@ def generate_page(from_path, template_path, dest_path, basepath):
     title = extract_title(markdown_content)
     html_content = convert_to_html(markdown_content)
     new_page = template_content.replace("{{ Title }}", title).replace("{{ Content }}", html_content)
-    new_page = new_page.replace("href=/", f"href=\"{basepath}")
+    new_page = new_page.replace("href=\"/", f"href=\"{basepath}").replace("src=\"/", f"src=\"{basepath}")
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    print(f"[X] {new_page}")
 
     Path(f"{dest_path}/index.html").write_text(new_page)
 
